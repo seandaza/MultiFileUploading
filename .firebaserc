@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "dev": "gc-k-gbl-lab"
+  },
+  "targets":{
+    "gc-k-gbl-lab":{
+      "hosting":{
+        "dev_target":[
+          "mex-ocr-poc"
+        ]
+      }
+    }
+  }
+}
