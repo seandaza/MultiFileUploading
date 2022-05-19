@@ -1,32 +1,67 @@
-import { Button, Input } from '@keoworld/gbl-ui-kit'
+import { Button, Select } from '@keoworld/gbl-ui-kit'
 import { ANDROID_192 } from '@keoworld/gbl-ui-kit/assets/logo'
 import { useState } from 'react'
 import styled from 'styled-components'
+import Document from './Document'
 import storage from './firebase'
 
 const FileUpload = () => {
 
   const [documents , setDocuments] = useState('');
+  const [selectedOption, setSelectedOption] = useState(null);
+  const options = [
+    { value: 'prueba', label: 'prueba' },
+    { value: 'IRS', label: 'ISR' },
+  ]
+
+  const onHandleChange = (docs) => {
+    setDocuments(docs[0]);
+  }
+
+  const onHandleChangeSelect = (event) => {
+    setSelectedOption(event.target.value);
+  }
+
+  const deleteFile = () => {
+    setDocuments('');
+    console.log('docucumento pro',documents)
+  }
 
   const upload = ()=>{
     if (documents == null) return;
     storage.ref(`/docs/${documents.name}`).put(documents);
+    console.log(selectedOption)
   }
 
   const onHandleSubmit = (event) => {
     event.preventDefault();
-    console.log(event);
-    setDocuments(event.target.files[0]);
+    upload();
   }
 
   return (
     <SignInStyled>
       <img alt='logo' src={ANDROID_192} />
-      <form className='sign-in'>
-        <Input type="file" onChange={onHandleSubmit}/>
-        <Button size='large' device='mobileLight' onClick={upload}>
+      <h2>Lectura de Archivos</h2>
+      <form className='file_upload' onSubmit={onHandleSubmit}>
+        <Select 
+          label='tipo de archivo'
+          onChange={onHandleChangeSelect}>
+            <option value>Seleccione tipo de archivo</option>
+                {options.map((e, key) => {
+                  return (
+                    <option key={key} value={e.value}>
+                      {e.label}
+                    </option>
+                  );
+            })}
+        </Select>
+        <p/>
+        <Document allowUpload allowedDocumentTypes=".pdf" documentName="file" file={documents} 
+        label={"suba su documento"} onChange={onHandleChange} onClickDelete={deleteFile}/>
+        <p/>
+        <Button size='large' device='mobileLight'  type='submit'>
           Cargar
-        </Button>
+        </Button> 
       </form>
     </SignInStyled>
   )
