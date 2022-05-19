@@ -1,25 +1,35 @@
-import { Button, Icon, Input } from '@keoworld/gbl-ui-kit'
+import { Button, Input } from '@keoworld/gbl-ui-kit'
 import { ANDROID_192 } from '@keoworld/gbl-ui-kit/assets/logo'
 import { useState } from 'react'
 import styled from 'styled-components'
+import storage from './firebase'
 
 const FileUpload = () => {
 
-    const onHandleSubmit = async (event) => {
-        event.preventDefault()
-        console.log("boton")// texto plano
-    }
+  const [documents , setDocuments] = useState('');
 
-    return (
-        <SignInStyled>
-            <img alt='logo' src={ANDROID_192} />
-            <form className='sign-in' onSubmit={onHandleSubmit}>
-                <Button size='large' device='mobileLight' type='submit'>
-                    Cargar
-                </Button>
-            </form>
-        </SignInStyled>
-    )
+  const upload = ()=>{
+    if (documents == null) return;
+    storage.ref(`/docs/${documents.name}`).put(documents);
+  }
+
+  const onHandleSubmit = (event) => {
+    event.preventDefault();
+    console.log(event);
+    setDocuments(event.target.files[0]);
+  }
+
+  return (
+    <SignInStyled>
+      <img alt='logo' src={ANDROID_192} />
+      <form className='sign-in'>
+        <Input type="file" onChange={onHandleSubmit}/>
+        <Button size='large' device='mobileLight' onClick={upload}>
+          Cargar
+        </Button>
+      </form>
+    </SignInStyled>
+  )
 }
 
 const SignInStyled = styled.div`
