@@ -7,11 +7,12 @@ import storage from './firebase'
 
 const FileUpload = () => {
 
-  const [documents , setDocuments] = useState('');
+  const [documents , setDocuments] = useState(null);
   const [selectedOption, setSelectedOption] = useState(null);
+  const [url, setUrl] = useState(null);
   const options = [
     { value: 'prueba', label: 'prueba' },
-    { value: 'IRS', label: 'ISR' },
+    { value: 'ISR', label: 'ISR' },
   ]
 
   const onHandleChange = (docs) => {
@@ -23,14 +24,24 @@ const FileUpload = () => {
   }
 
   const deleteFile = () => {
-    setDocuments('');
-    console.log('docucumento pro',documents)
+    setDocuments(null);
   }
 
   const upload = ()=>{
-    if (documents == null) return;
-    storage.ref(`/docs/${documents.name}`).put(documents);
-    console.log(selectedOption)
+    if (documents == null  || selectedOption == null || selectedOption === 'base') {
+      console.log('NO pon algo')  
+    } else {
+      storage.ref(`/docs/${documents.name}`).put(documents);
+      console.log(documents)
+      descarga();
+    }
+  }
+
+  const descarga = () => {
+    storage.ref("docs").child(documents.name).getDownloadURL()
+          .then((url) => {
+            setUrl(url);
+          });
   }
 
   const onHandleSubmit = (event) => {
@@ -46,7 +57,7 @@ const FileUpload = () => {
         <Select 
           label='tipo de archivo'
           onChange={onHandleChangeSelect}>
-            <option value>Seleccione tipo de archivo</option>
+            <option value={'base'}>Seleccione tipo de archivo</option>
                 {options.map((e, key) => {
                   return (
                     <option key={key} value={e.value}>
@@ -63,6 +74,7 @@ const FileUpload = () => {
           Cargar
         </Button> 
       </form>
+      <a href={url}>{url}</a>
     </SignInStyled>
   )
 }
