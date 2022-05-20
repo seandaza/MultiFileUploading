@@ -67,8 +67,8 @@ const FileUpload = () => {
             })}
         </Select>
         <p/>
-        <Document allowUpload allowedDocumentTypes=".pdf" documentName="file" file={documents} 
-        label={"suba su documento"} onChange={onHandleChange} onClickDelete={deleteFile}/>
+        <Document allowUpload allowedDocumentTypes=".pdf" documentName="file" key={documents} 
+        file={documents} label={"suba su documento"} onChange={onHandleChange} onClickDelete={deleteFile}/>
         <p/>
         <Button size='large' device='mobileLight'  type='submit'>
           Cargar
