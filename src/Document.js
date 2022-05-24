@@ -25,8 +25,12 @@ const Document = (props) => {
     onClickDownload,
     onClickComment
   } = props
-  const uploadFile = () => window.document.getElementById(documentName).click()
+  const uploadFile = (event) => {
+    event.preventDefault();
+    window.document.getElementById(documentName).click()
+  }
   const onHandleChange = (event) => {
+    event.preventDefault();
     const files = event.target.files
     if (files && onChange) onChange(files)
   }

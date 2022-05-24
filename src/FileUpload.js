@@ -1,6 +1,7 @@
 import { Button, Select } from '@keoworld/gbl-ui-kit'
 import { ANDROID_192 } from '@keoworld/gbl-ui-kit/assets/logo'
-import { useState } from 'react'
+import axios from 'axios'
+import { useState, useEffect } from 'react'
 import styled from 'styled-components'
 import Document from './Document'
 import storage from './firebase'
@@ -9,11 +10,20 @@ const FileUpload = () => {
 
   const [documents , setDocuments] = useState(null);
   const [selectedOption, setSelectedOption] = useState(null);
-  const [url, setUrl] = useState(null);
+  const [docsUrls, setDocsUrls] = useState([]);
   const options = [
     { value: 'prueba', label: 'prueba' },
     { value: 'ISR', label: 'ISR' },
   ]
+
+  useEffect (() => {
+    storage.ref(`docs/`).listAll().then((response) => {
+      console.log(response.items)
+      response.items.forEach((item)=> {
+        setDocsUrls((prev) => [...prev,{value:item.name, label: item.getDownloadURL()}]);
+      });
+    });
+  },[]);  
 
   const onHandleChange = (docs) => {
     setDocuments(docs[0]);
@@ -31,17 +41,19 @@ const FileUpload = () => {
     if (documents == null  || selectedOption == null || selectedOption === 'base') {
       console.log('NO pon algo')  
     } else {
-      storage.ref(`/docs/${documents.name}`).put(documents);
-      console.log(documents)
+      storage.ref(`/docs/${documents.name}`).put(documents).then((snapshoot) => {
+        snapshoot.ref().then((url) => {
+          setDocsUrls((prev) => [...prev,{value:documents.name, label: url}]);
+        });
+      });
       descarga();
     }
   }
 
-  const descarga = () => {
-    storage.ref("docs").child(documents.name).getDownloadURL()
-          .then((url) => {
-            setUrl(url);
-          });
+  const descarga = async () => {
+    const url = await storage.ref("docs").child(documents.name).getDownloadURL()
+    const response = await axios.post("http://127.0.0.1:5000/front",{"url": url,"doctype": selectedOption})
+    console.log(response.data)
   }
 
   const onHandleSubmit = (event) => {
@@ -53,7 +65,7 @@ const FileUpload = () => {
     <SignInStyled>
       <img alt='logo' src={ANDROID_192} />
       <h2>Lectura de Archivos</h2>
-      <form className='file_upload' onSubmit={onHandleSubmit}>
+      <form className='file_upload'>
         <Select 
           label='tipo de archivo'
           onChange={onHandleChangeSelect}>
@@ -70,12 +82,15 @@ const FileUpload = () => {
         <Document allowUpload allowedDocumentTypes=".pdf" documentName="file" key={documents} 
         file={documents} label={"suba su documento"} onChange={onHandleChange} onClickDelete={deleteFile}/>
         <p/>
-        <Button size='large' device='mobileLight'  type='submit'>
+        <Button size='large' device='mobileLight' onClick={onHandleSubmit}>
           Cargar
         </Button> 
       </form>
-      <a href={url}>{url}</a>
-    </SignInStyled>
+      <p/>
+      {docsUrls.map((e,key) => {
+        return <a key={key} href={e.label}> {e.value} </a>;
+      })} 
+      </SignInStyled>
   )
 }
 
