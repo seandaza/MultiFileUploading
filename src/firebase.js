@@ -1,5 +1,6 @@
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/storage';
+import 'firebase/compat/auth';
 
 const firebaseConfig = {
     apiKey: "AIzaSyBF82jFVrUwEZY6z62TonxFxW1d2C51Vtc",
@@ -12,5 +13,13 @@ const firebaseConfig = {
 
 const fb = firebase.initializeApp(firebaseConfig);
 const storage = fb.storage();
-
+export const auth = firebase.auth();
+export const microsoftProvider =  new firebase.auth.OAuthProvider('microsoft.com');
+microsoftProvider.setCustomParameters({
+    // Optional "tenant" parameter in case you are using an Azure AD tenant.
+    // eg. '8eaef023-2b34-4da1-9baa-8bc8c9d6a490' or 'contoso.onmicrosoft.com'
+    // or "common" for tenant-independent tokens.
+    // The default value is "common".
+    tenant: '24b5cc37-4806-4a81-ad8d-3eec4a0343dd'
+  });
 export default storage;

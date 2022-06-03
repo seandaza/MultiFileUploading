@@ -13,7 +13,7 @@ const FileUpload = () => {
   const [docsUrls, setDocsUrls] = useState([]);
   const options = [
     { value: 'prueba', label: 'prueba' },
-    { value: 'ISR', label: 'ISR' },
+    { value: 'ISR', label: 'ISR' }
   ]
 
   useEffect (() => {
@@ -37,11 +37,11 @@ const FileUpload = () => {
     setDocuments(null);
   }
 
-  const upload = ()=>{
+  const upload = async ()=>{
     if (documents == null  || selectedOption == null || selectedOption === 'base') {
       console.log('NO pon algo')  
     } else {
-      storage.ref(`/docs/${documents.name}`).put(documents).then((snapshoot) => {
+      await storage.ref(`/docs/${documents.name}`).put(documents).then((snapshoot) => {
         snapshoot.ref().then((url) => {
           setDocsUrls((prev) => [...prev,{value:documents.name, label: url}]);
         });
@@ -52,7 +52,7 @@ const FileUpload = () => {
 
   const descarga = async () => {
     const url = await storage.ref("docs").child(documents.name).getDownloadURL()
-    const response = await axios.post("http://127.0.0.1:5000/front",{"url": url,"doctype": selectedOption})
+    const response = await axios.post("https://ocrgunicorn-dot-gc-k-gbl-lab.uc.r.appspot.com/ocr",{"url": url,"doctype": selectedOption})
     console.log(response.data)
   }
 
