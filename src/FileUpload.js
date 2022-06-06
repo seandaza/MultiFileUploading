@@ -15,12 +15,14 @@ const FileUpload = () => {
   ]
 
   useEffect (() => {
-    db.collection(`ocr`).onSnapshot(
-      (snapshot) => {
-        snapshot.docs.forEach((item) => {
-          setDocsUrls((prev) => [...prev,{value:item.data().value, label: item.data().label}]);
+    db.collection(`ocr`).onSnapshot((snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === "added") {
+            setDocsUrls((prev) => [...prev,{value:change.doc.data().value, label: change.doc.data().label}]);
+          }
         });
       });
+   
   },[]);  
 
   const onHandleChange = (docs) => {
