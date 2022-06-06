@@ -1,0 +1,17 @@
+stages:
+  - deploy-poc
+
+image: node:latest
+
+deploy-poc:
+  stage: deploy-poc
+  tags:
+    - keo-runner
+  script:
+    - cp $ENV_DEV .env.development.local
+    - npm install
+    - CI='' npm run build
+    - firebase deploy -P dev --only hosting --token $FIREBASE_TOKEN_DEV    
+  only:
+    - main
+    
