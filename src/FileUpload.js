@@ -4,25 +4,23 @@ import axios from 'axios'
 import { useState, useEffect } from 'react'
 import styled from 'styled-components'
 import Document from './Document'
-import storage from './firebase'
+import storage, { db } from './firebase'
 
 const FileUpload = () => {
-
   const [documents , setDocuments] = useState(null);
   const [selectedOption, setSelectedOption] = useState(null);
   const [docsUrls, setDocsUrls] = useState([]);
   const options = [
-    { value: 'prueba', label: 'prueba' },
     { value: 'ISR', label: 'ISR' }
   ]
 
   useEffect (() => {
-    storage.ref(`docs/`).listAll().then((response) => {
-      console.log(response.items)
-      response.items.forEach((item)=> {
-        setDocsUrls((prev) => [...prev,{value:item.name, label: item.getDownloadURL()}]);
+    db.collection(`ocr`).onSnapshot(
+      (snapshot) => {
+        snapshot.docs.forEach((item) => {
+          setDocsUrls((prev) => [...prev,{value:item.data().value, label: item.data().label}]);
+        });
       });
-    });
   },[]);  
 
   const onHandleChange = (docs) => {
@@ -41,19 +39,16 @@ const FileUpload = () => {
     if (documents == null  || selectedOption == null || selectedOption === 'base') {
       console.log('NO pon algo')  
     } else {
-      await storage.ref(`/docs/${documents.name}`).put(documents).then((snapshoot) => {
-        snapshoot.ref().then((url) => {
-          setDocsUrls((prev) => [...prev,{value:documents.name, label: url}]);
-        });
-      });
-      descarga();
+      await storage.ref(`/docs/${documents.name}`).put(documents).then(async (snapshoot) => {
+          const url = await snapshoot.ref.getDownloadURL();
+          db.collection('ocr').doc().set({value:documents.name, label: url});
+        });    
+      back();
     }
   }
 
-  const descarga = async () => {
-    const url = await storage.ref("docs").child(documents.name).getDownloadURL()
-    const response = await axios.post("https://ocrgunicorn-dot-gc-k-gbl-lab.uc.r.appspot.com/ocr",{"url": url,"doctype": selectedOption})
-    console.log(response.data)
+  const back = async () => {
+    await axios.post("https://ocrgunicorn-dot-gc-k-gbl-lab.uc.r.appspot.com/ocr",{"url": `docs/`+documents.name,"doctype": selectedOption})
   }
 
   const onHandleSubmit = (event) => {

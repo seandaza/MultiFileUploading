@@ -1,6 +1,7 @@
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/storage';
 import 'firebase/compat/auth';
+import 'firebase/compat/firestore';
 
 const firebaseConfig = {
     apiKey: "AIzaSyBF82jFVrUwEZY6z62TonxFxW1d2C51Vtc",
@@ -13,6 +14,7 @@ const firebaseConfig = {
 
 const fb = firebase.initializeApp(firebaseConfig);
 const storage = fb.storage();
+export const db = firebase.firestore();
 export const auth = firebase.auth();
 export const microsoftProvider =  new firebase.auth.OAuthProvider('microsoft.com');
 microsoftProvider.setCustomParameters({

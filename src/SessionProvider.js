@@ -12,7 +12,6 @@ export const SessionProvider = ({ children }) => {
 
   useEffect(() => {
     const unsuscribe = auth.onAuthStateChanged((user) => {
-      console.log({user})
       setUserAuth(user)
     })
     return () => { unsuscribe() }
