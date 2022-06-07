@@ -14,9 +14,23 @@ const FileUpload = () => {
     { value: 'ISR', label: 'ISR' }
   ]
 
-  useEffect (() => {
+  useEffect(() => {
     db.collection(`ocr`).onSnapshot((snapshot) => {
+      const dataDocs = snapshot.docChanges().reduce( (acc, itm) => {
+        const doc = itm.doc.data()
+        return {
+          ...acc,
+          [doc?.value]: {
+            ...acc[doc?.value],
+            [doc?.type]: doc?.label
+          }
+        }
+      }, {}) 
+      setDocsUrls( prev => ({ ...prev, ...dataDocs }) )
+    })
+/*
       snapshot.docChanges().forEach((change) => {
+        console.log('data', change.doc.data())
         if (change.type === "added") {
           if (docsUrls[change.doc.data().value]){
             var tempdoc = docsUrls[change.doc.data().value] 
@@ -27,8 +41,8 @@ const FileUpload = () => {
           }
         }
       });
-    }); 
-  },[docsUrls]);    
+    }); */
+  },[]);    
 
   const onHandleChange = (docs) => {
     setDocuments(docs[0]);
@@ -91,7 +105,6 @@ const FileUpload = () => {
       </form>
       <p/>
       { Object.keys(docsUrls).map( (item, index) => {
-        console.log(docsUrls)
         return <div key={index}>
           <a key={item+"pdf"} href={docsUrls[item]["pdf"]}> {item + ".pdf"} </a>
           <a key={item+"xlsx"} href={docsUrls[item]["xlsx"]}> {item + ".excel"} </a>
