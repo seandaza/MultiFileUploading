@@ -9,21 +9,40 @@ import storage, { db } from './firebase'
 const FileUpload = () => {
   const [documents , setDocuments] = useState(null);
   const [selectedOption, setSelectedOption] = useState(null);
-  const [docsUrls, setDocsUrls] = useState([]);
+  const [docsUrls, setDocsUrls] = useState({});
   const options = [
     { value: 'ISR', label: 'ISR' }
   ]
 
-  useEffect (() => {
+  useEffect(() => {
     db.collection(`ocr`).onSnapshot((snapshot) => {
-        snapshot.docChanges().forEach((change) => {
-          if (change.type === "added") {
-            setDocsUrls((prev) => [...prev,{value:change.doc.data().value, label: change.doc.data().label}]);
+      const dataDocs = snapshot.docChanges().reduce( (acc, itm) => {
+        const doc = itm.doc.data()
+        return {
+          ...acc,
+          [doc?.value]: {
+            ...acc[doc?.value],
+            [doc?.type]: doc?.label
           }
-        });
+        }
+      }, {}) 
+      setDocsUrls( prev => ({ ...prev, ...dataDocs }) )
+    })
+/*
+      snapshot.docChanges().forEach((change) => {
+        console.log('data', change.doc.data())
+        if (change.type === "added") {
+          if (docsUrls[change.doc.data().value]){
+            var tempdoc = docsUrls[change.doc.data().value] 
+            tempdoc[change.doc.data().type] = change.doc.data().label
+            setDocsUrls((prev) => ({...prev, [change.doc.data().value]: tempdoc}))
+          } else {            
+            setDocsUrls((prev) => ({...prev, [change.doc.data().value]:{[change.doc.data().type]: change.doc.data().label}}), console.log(docsUrls))
+          }
+        }
       });
-   
-  },[]);  
+    }); */
+  },[]);    
 
   const onHandleChange = (docs) => {
     setDocuments(docs[0]);
@@ -43,7 +62,8 @@ const FileUpload = () => {
     } else {
       await storage.ref(`/docs/${documents.name}`).put(documents).then(async (snapshoot) => {
           const url = await snapshoot.ref.getDownloadURL();
-          db.collection('ocr').doc().set({value:documents.name, label: url});
+          const doc = documents.name.split(".")
+          db.collection('ocr').doc().set({value:doc[0], label: url, type: doc[1]});
         });    
       back();
     }
@@ -84,9 +104,12 @@ const FileUpload = () => {
         </Button> 
       </form>
       <p/>
-      {docsUrls.map((e,key) => {
-        return <a key={key} href={e.label}> {e.value} </a>;
-      })} 
+      { Object.keys(docsUrls).map( (item, index) => {
+        return <div key={index}>
+          <a key={item+"pdf"} href={docsUrls[item]["pdf"]}> {item + ".pdf"} </a>
+          <a key={item+"xlsx"} href={docsUrls[item]["xlsx"]}> {item + ".excel"} </a>
+          </div>;
+      })}     
       </SignInStyled>
   )
 }
