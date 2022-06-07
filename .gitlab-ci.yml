@@ -6,12 +6,15 @@ image: node:latest
 deploy-poc:
   stage: deploy-poc
   tags:
-    - keo-runner
+    - docker-keo-runner
   script:
-    - cp $ENV_DEV .env.development.local
+    - node -v
+    - cp $ENV_DEVELOPMENT .env.production.local
     - npm install
     - CI='' npm run build
-    - firebase deploy -P dev --only hosting --token $FIREBASE_TOKEN_DEV    
+    - npm i -g firebase-tools@latest
+    - firebase -P dev target:apply hosting dev_target mex-ocr-poc
+    - firebase deploy -P dev --only hosting:dev_target --token $FIREBASE_TOKEN_DEV
   only:
     - main
     
