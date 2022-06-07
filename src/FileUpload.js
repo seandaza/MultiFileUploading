@@ -65,14 +65,16 @@ const FileUpload = () => {
       await storage.ref(`/docs/${documents.name}`).put(documents).then(async (snapshoot) => {
         const url = await snapshoot.ref.getDownloadURL();
         const doc = documents.name.split(".")
-        db.collection('ocr').doc().set({ value: doc[0], label: url, type: doc[1] });
+        const type = doc.pop()
+        console.log(doc.join("."));
+        db.collection('ocr').doc().set({ value: doc.join("."), label: url, type: type });
       });
       back();
     }
   }
 
-  const back = async () => {
-    await axios.post("https://ocrgunicorn-dot-gc-k-gbl-lab.uc.r.appspot.com/ocr", { "url": `docs/` + documents.name, "doctype": selectedOption })
+  const back = () => {
+    axios.post("https://ocrgunicorn-dot-gc-k-gbl-lab.uc.r.appspot.com/ocr", { "url": `docs/` + documents.name, "doctype": selectedOption })
   }
 
   const onHandleSubmit = (event) => {
