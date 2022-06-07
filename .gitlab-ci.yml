@@ -9,7 +9,7 @@ deploy-poc:
     - docker-keo-runner
   script:
     - node -v
-    - cp $ENV_DEVELOPMENT .env.production.local
+    - cp $ENV_DEV .env.production.local
     - npm install
     - CI='' npm run build
     - npm i -g firebase-tools@latest
