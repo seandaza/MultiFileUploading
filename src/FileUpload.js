@@ -62,19 +62,22 @@ const FileUpload = () => {
     if (documents == null || selectedOption == null || selectedOption === 'base') {
       console.log('NO pon algo')
     } else {
-      await storage.ref(`/docs/${documents.name}`).put(documents).then(async (snapshoot) => {
+      var date = new Date();
+      var flotDate = date.getTime().toString()
+      const doc = documents.name.split(".");
+      const type = doc.pop();        
+      var value = doc.join(".").concat("-",flotDate)
+      var nameDoc = value.concat(".",type)
+      await storage.ref(`/docs/${nameDoc}`).put(documents).then(async (snapshoot) => {
         const url = await snapshoot.ref.getDownloadURL();
-        const doc = documents.name.split(".")
-        const type = doc.pop()
-        console.log(doc.join("."));
-        db.collection('ocr').doc().set({ value: doc.join("."), label: url, type: type });
+        db.collection('ocr').doc().set({ value: value, label: url, type: type });
       });
-      back();
+      back(nameDoc);
     }
   }
 
-  const back = () => {
-    axios.post("https://ocrgunicorn-dot-gc-k-gbl-lab.uc.r.appspot.com/ocr", { "url": `docs/` + documents.name, "doctype": selectedOption })
+  const back = (docname) => {
+    axios.post("https://ocrgunicorn-dot-gc-k-gbl-lab.uc.r.appspot.com/ocr", { "url": `docs/` + docname, "doctype": selectedOption })
   }
 
   const onHandleSubmit = (event) => {
