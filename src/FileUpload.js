@@ -115,14 +115,17 @@ const FileUpload = () => {
         <thead>
           <tr>
             <th>Name</th>
+            <th>Fecha</th>
             <th>PDF</th>
             <th>Excel</th>
           </tr>
         </thead>
         <tbody>
           {Object.keys(docsUrls).map((item, index) => {
+            const fecha = new Date(parseFloat(item.split("-").pop()))
             return <tr key={index}>
               <td key={item}>{item}</td>
+              <td key={item + "fecha"}>{fecha.toLocaleString()}</td>
               <td><a key={item + "pdf"} href={docsUrls[item]["pdf"]}> pdf </a></td>
               <td><a key={item + "xlsx"} href={docsUrls[item]["xlsx"]}> excel </a></td>
             </tr>;
@@ -172,16 +175,20 @@ const SignInStyled = styled.div`
   /* Table Styles */
 
   .fl-table {
+    display: block;
     box-shadow: 0px 35px 50px rgba( 0, 0, 0, 0.2 );
     border-radius: 5px;
     border-collapse: collapse;
     width: 70%;
-    max-width: 100%;
+    max-height: 50%;
+    overflow-y: scroll; 
+    overflow-x: hidden;   
 }
 
 .fl-table td, .fl-table th {
     text-align: center;
     padding: 8px;
+    width: 50%;
 }
 
 .fl-table td {
@@ -190,6 +197,8 @@ const SignInStyled = styled.div`
 }
 
 .fl-table thead th {
+    position: sticky;
+    top: 0px;
     color: #ffffff;
     background: #FF4759;
 }
@@ -199,14 +208,6 @@ const SignInStyled = styled.div`
     .fl-table {
         display: block;
         width: 100%;
-    }
-    .table-wrapper:before{
-        content: "Scroll horizontally >";
-        display: block;
-        text-align: right;
-        font-size: 11px;
-        color: white;
-        padding: 0 0 10px;
     }
     .fl-table thead, .fl-table tbody, .fl-table thead th {
         display: block;
