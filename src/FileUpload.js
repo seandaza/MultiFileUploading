@@ -18,32 +18,23 @@ const FileUpload = () => {
 
   useEffect(() => {
     db.collection(`ocr`).onSnapshot((snapshot) => {
-      const dataDocs = snapshot.docChanges().reduce((acc, itm) => {
+      const dataDocs = snapshot.docChanges().map((itm) => {
         const doc = itm.doc.data()
-        return {
-          ...acc,
-          [doc?.value]: {
-            ...acc[doc?.value],
-            [doc?.type]: doc?.label
-          }
-        }
-      }, {})
-      setDocsUrls(prev => ({ ...prev, ...dataDocs }))
-    })
-    /*
-          snapshot.docChanges().forEach((change) => {
-            console.log('data', change.doc.data())
-            if (change.type === "added") {
-              if (docsUrls[change.doc.data().value]){
-                var tempdoc = docsUrls[change.doc.data().value] 
-                tempdoc[change.doc.data().type] = change.doc.data().label
-                setDocsUrls((prev) => ({...prev, [change.doc.data().value]: tempdoc}))
-              } else {            
-                setDocsUrls((prev) => ({...prev, [change.doc.data().value]:{[change.doc.data().type]: change.doc.data().label}}), console.log(docsUrls))
-              }
+        return doc
+      })
+      setDocsUrls(prev => {
+        const newData = dataDocs.reduce((acc, doc) => {
+          return {
+            ...acc,
+            [doc?.value]: {
+              ...acc[doc?.value],
+              [doc?.type]: doc?.label
             }
-          });
-        }); */
+          }
+        }, prev)
+        return newData
+      })
+    })
   }, []);
 
   const onHandleChange = (docs) => {
@@ -127,7 +118,14 @@ const FileUpload = () => {
               <td key={item}>{item}</td>
               <td key={item + "fecha"}>{fecha.toLocaleString()}</td>
               <td><a key={item + "pdf"} href={docsUrls[item]["pdf"]}> pdf </a></td>
-              <td><a key={item + "xlsx"} href={docsUrls[item]["xlsx"]}> excel </a></td>
+              <td>{
+                (docsUrls[item]["pdf"] && !docsUrls[item]["xlsx"] ) ?
+                <p>...loading</p> :
+                <a key={item + "xlsx"} href={docsUrls[item]["xlsx"]}> 
+                  excel 
+                </a>
+                }
+              </td>
             </tr>;
           })}
         </tbody>
