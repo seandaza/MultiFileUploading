@@ -29,6 +29,7 @@ const FileUpload = () => {
         }
       }, {})
       setDocsUrls(prev => ({ ...prev, ...dataDocs }))
+      console.log(docsUrls)
     })
     /*
           snapshot.docChanges().forEach((change) => {
@@ -59,8 +60,9 @@ const FileUpload = () => {
   }
 
   const upload = async () => {
+    debugger
     if (documents == null || selectedOption == null || selectedOption === 'base') {
-      console.log('NO pon algo')
+     /*  console.log('NO pon algo') */
     } else {
       var date = new Date();
       var flotDate = date.getTime().toString()
@@ -73,6 +75,7 @@ const FileUpload = () => {
         db.collection('ocr').doc().set({ value: value, label: url, type: type });
       });
       back(nameDoc);
+      /* console.log(nameDoc) */
     }
   }
 
