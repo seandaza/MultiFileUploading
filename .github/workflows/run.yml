@@ -1,0 +1,72 @@
+name: main
+
+on:
+  push:
+    branches:
+      - develop
+      - qa
+      - stage
+      - main
+
+jobs:
+  deploy:
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    name: 'deploy'
+    runs-on: ubuntu-latest
+    steps:
+      # Determine environment based on branch
+      - name: Determine environment based on branch
+        run: |
+          if [[ $GITHUB_REF == "refs/heads/main" ]]; then
+            echo "THE_ENV=PRO"  >> "$GITHUB_ENV"
+          elif [[ $GITHUB_REF == "refs/heads/develop" ]]; then
+            echo "THE_ENV=DEV"  >> "$GITHUB_ENV"
+          elif [[ $GITHUB_REF == "refs/heads/qa" ]]; then
+            echo "THE_ENV=QA"  >> "$GITHUB_ENV"
+          elif [[ $GITHUB_REF == "refs/heads/stage" ]]; then
+            echo "THE_ENV=STG"  >> "$GITHUB_ENV"
+          else
+            echo "Unknown branch: $GITHUB_REF"
+            exit 1
+          fi
+          echo "The environment is: $THE_ENV"
+
+      - name: print-branch
+        run: |
+            branch_name="${GITHUB_REF#refs/heads/}"
+            echo "Pushed branch: $branch_name"
+            
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          token_format: 'access_token'
+          workload_identity_provider: ${{ secrets[format('WORKLOAD_IDENTITY_PROVIDER_{0}', env.THE_ENV)] }}
+          service_account: ${{ secrets[format('SERVICE_ACCOUNT_{0}', env.THE_ENV)] }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Manage Variables
+        run: |
+          echo "${{ vars[format('ENV_{0}', env.THE_ENV)] }}" >> .env.production.local
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: CI='' npm run build
+
+      - name: Install Firebase CLI
+        run: npm i -g firebase-tools@10.0.1
+
+      - name: Apply Firebase target
+        run: firebase -P ${{env.THE_ENV}} target:apply hosting ${{env.THE_ENV}}_TARGET ${{ vars[format('HOSTING_SITE_{0}', env.THE_ENV)] }}
+
+      - name: Deploy to Firebase
+        run: firebase deploy -P ${{env.THE_ENV}} --only hosting:${{env.THE_ENV}}_TARGET --token "${{ steps.auth.outputs.access_token }}"
