@@ -3,7 +3,7 @@ import { ANDROID_192 } from '@keoworld/gbl-ui-kit/assets/logo'
 import axios from 'axios'
 import { useState, useEffect } from 'react'
 import styled from 'styled-components'
-import { useAuth } from './auth'
+/* import { useAuth } from './auth' */
 import Document from './Document'
 import storage, { db } from './firebase'
 
@@ -11,7 +11,7 @@ const FileUpload = () => {
   const [documents, setDocuments] = useState(null);
   const [selectedOption, setSelectedOption] = useState(null);
   const [docsUrls, setDocsUrls] = useState({});
-  const { signOut } = useAuth()
+  /* const { signOut } = useAuth() */
   const options = [
     { value: 'ISR', label: 'ISR' }
   ]
@@ -29,7 +29,6 @@ const FileUpload = () => {
         }
       }, {})
       setDocsUrls(prev => ({ ...prev, ...dataDocs }))
-      console.log(docsUrls)
     })
     /*
           snapshot.docChanges().forEach((change) => {
@@ -60,9 +59,8 @@ const FileUpload = () => {
   }
 
   const upload = async () => {
-    debugger
     if (documents == null || selectedOption == null || selectedOption === 'base') {
-     /*  console.log('NO pon algo') */
+      console.log('NO pon algo')
     } else {
       var date = new Date();
       var flotDate = date.getTime().toString()
@@ -75,7 +73,6 @@ const FileUpload = () => {
         db.collection('ocr').doc().set({ value: value, label: url, type: type });
       });
       back(nameDoc);
-      /* console.log(nameDoc) */
     }
   }
 
@@ -86,6 +83,7 @@ const FileUpload = () => {
   const onHandleSubmit = (event) => {
     event.preventDefault();
     upload();
+    setDocuments(null);
   }
 
   return (
@@ -132,9 +130,9 @@ const FileUpload = () => {
           })}
         </tbody>
       </table>
-      <Button className="sign-out" onClick={signOut}>
+{/*       <Button className="sign-out" onClick={signOut}>
         Log out
-      </Button>
+      </Button> */}
     </SignInStyled>
   )
 }
