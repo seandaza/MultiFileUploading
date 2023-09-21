@@ -44,7 +44,7 @@ const FileUpload = () => {
             }
           });
         }); */
-  }, []);
+  },);
 
   const onHandleChange = (docs) => {
     setDocuments(docs[0]);
@@ -60,7 +60,7 @@ const FileUpload = () => {
 
   const upload = async () => {
     if (documents == null || selectedOption == null || selectedOption === 'base') {
-      console.log('NO pon algo')
+      console.log('NO, pon algo')
     } else {
       var date = new Date();
       var flotDate = date.getTime().toString()
@@ -77,7 +77,11 @@ const FileUpload = () => {
   }
 
   const back = (docname) => {
-    axios.post("https://ocrgunicorn-dot-gc-k-gbl-lab.uc.r.appspot.com/ocr", { "url": `docs/` + docname, "doctype": selectedOption })
+    axios.post("https://ocrgunicorn-dot-gc-k-gbl-lab.uc.r.appspot.com/ocr", { "url": `docs/` + docname, "doctype": selectedOption }
+    .then((reponse) => {
+
+    })
+    )
   }
 
   const onHandleSubmit = (event) => {
