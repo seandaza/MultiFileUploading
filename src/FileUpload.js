@@ -1,65 +1,28 @@
-import { Button, Select } from '@keoworld/gbl-ui-kit'
+import { Button } from '@keoworld/gbl-ui-kit'
 import { ANDROID_192 } from '@keoworld/gbl-ui-kit/assets/logo'
 import axios from 'axios'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import styled from 'styled-components'
-/* import { useAuth } from './auth' */
+
 import Document from './Document'
 import storage, { db } from './firebase'
 
 const FileUpload = () => {
-  const [documents, setDocuments] = useState(null);
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [docsUrls, setDocsUrls] = useState({});
-  /* const { signOut } = useAuth() */
-  const options = [
-    { value: 'ISR', label: 'ISR' }
-  ]
+  const [documents, setDocuments] = useState([]);
+  const [selectedOption] = useState(null);
 
-  useEffect(() => {
-    db.collection(`ocr`).onSnapshot((snapshot) => {
-      const dataDocs = snapshot.docChanges().reduce((acc, itm) => {
-        const doc = itm.doc.data()
-        return {
-          ...acc,
-          [doc?.value]: {
-            ...acc[doc?.value],
-            [doc?.type]: doc?.label
-          }
-        }
-      }, {})
-      setDocsUrls(prev => ({ ...prev, ...dataDocs }))
-    })
-    /*
-          snapshot.docChanges().forEach((change) => {
-            console.log('data', change.doc.data())
-            if (change.type === "added") {
-              if (docsUrls[change.doc.data().value]){
-                var tempdoc = docsUrls[change.doc.data().value] 
-                tempdoc[change.doc.data().type] = change.doc.data().label
-                setDocsUrls((prev) => ({...prev, [change.doc.data().value]: tempdoc}))
-              } else {            
-                setDocsUrls((prev) => ({...prev, [change.doc.data().value]:{[change.doc.data().type]: change.doc.data().label}}), console.log(docsUrls))
-              }
-            }
-          });
-        }); */
-  },);
 
   const onHandleChange = (docs) => {
     setDocuments(docs[0]);
   }
 
-  const onHandleChangeSelect = (event) => {
-    setSelectedOption(event.target.value);
-  }
 
   const deleteFile = () => {
     setDocuments(null);
   }
 
   const upload = async () => {
-    if (documents == null || selectedOption == null || selectedOption === 'base') {
+    if (documents == null) {
       console.log('NO, pon algo')
     } else {
       var date = new Date();
@@ -95,18 +58,6 @@ const FileUpload = () => {
       <img alt='logo' src={ANDROID_192} />
       <h2>Lectura de Archivos</h2>
       <form className='file_upload'>
-        <Select
-          label='tipo de archivo'
-          onChange={onHandleChangeSelect}>
-          <option value={'base'}>Seleccione tipo de archivo</option>
-          {options.map((e, key) => {
-            return (
-              <option key={key} value={e.value}>
-                {e.label}
-              </option>
-            );
-          })}
-        </Select>
         <p />
         <Document allowUpload allowedDocumentTypes=".pdf" documentName="file" key={documents}
           file={documents} label={"suba su documento"} onChange={onHandleChange} onClickDelete={deleteFile} />
@@ -116,27 +67,6 @@ const FileUpload = () => {
         </Button>
       </form>
       <p />
-      <table className="fl-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>PDF</th>
-            <th>Excel</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Object.keys(docsUrls).map((item, index) => {
-            return <tr key={index}>
-              <td key={item}>{item}</td>
-              <td><a key={item + "pdf"} href={docsUrls[item]["pdf"]}> pdf </a></td>
-              <td><a key={item + "xlsx"} href={docsUrls[item]["xlsx"]}> excel </a></td>
-            </tr>;
-          })}
-        </tbody>
-      </table>
-{/*       <Button className="sign-out" onClick={signOut}>
-        Log out
-      </Button> */}
     </SignInStyled>
   )
 }
