@@ -1,139 +1,138 @@
-import { Button, Select } from '@keoworld/gbl-ui-kit'
+import { Button } from '@keoworld/gbl-ui-kit'
 import { ANDROID_192 } from '@keoworld/gbl-ui-kit/assets/logo'
 import axios from 'axios'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import styled from 'styled-components'
-import { useAuth } from './auth'
-import Document from './Document'
+import { Container } from "reactstrap";
+import { useDropzone } from 'react-dropzone'
+
+/* import Document from './Document' */
 import storage, { db } from './firebase'
 
 const FileUpload = () => {
-  const [documents, setDocuments] = useState(null);
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [docsUrls, setDocsUrls] = useState({});
-  const { signOut } = useAuth()
-  const options = [
-    { value: 'ISR', label: 'ISR' }
-  ]
-
-  useEffect(() => {
-    db.collection(`ocr`).onSnapshot((snapshot) => {
-      const dataDocs = snapshot.docChanges().reduce((acc, itm) => {
-        const doc = itm.doc.data()
-        return {
-          ...acc,
-          [doc?.value]: {
-            ...acc[doc?.value],
-            [doc?.type]: doc?.label
-          }
-        }
-      }, {})
-      setDocsUrls(prev => ({ ...prev, ...dataDocs }))
-    })
-    /*
-          snapshot.docChanges().forEach((change) => {
-            console.log('data', change.doc.data())
-            if (change.type === "added") {
-              if (docsUrls[change.doc.data().value]){
-                var tempdoc = docsUrls[change.doc.data().value] 
-                tempdoc[change.doc.data().type] = change.doc.data().label
-                setDocsUrls((prev) => ({...prev, [change.doc.data().value]: tempdoc}))
-              } else {            
-                setDocsUrls((prev) => ({...prev, [change.doc.data().value]:{[change.doc.data().type]: change.doc.data().label}}), console.log(docsUrls))
-              }
-            }
-          });
-        }); */
-  }, []);
+  const [documents, setDocuments] = useState([]);
+  const [rfc, setRfc] = useState('');
+  const [selectedPdfFiles, setSelectedPdfFiles] = useState([]);
 
   const onHandleChange = (docs) => {
-    setDocuments(docs[0]);
-  }
-
-  const onHandleChangeSelect = (event) => {
-    setSelectedOption(event.target.value);
-  }
-
-  const deleteFile = () => {
-    setDocuments(null);
-  }
-
-  const upload = async () => {
-    if (documents == null || selectedOption == null || selectedOption === 'base') {
-      console.log('NO pon algo')
-    } else {
-      var date = new Date();
-      var flotDate = date.getTime().toString()
-      const doc = documents.name.split(".");
-      const type = doc.pop();        
-      var value = doc.join(".").concat("-",flotDate)
-      var nameDoc = value.concat(".",type)
-      await storage.ref(`/docs/${nameDoc}`).put(documents).then(async (snapshoot) => {
-        const url = await snapshoot.ref.getDownloadURL();
-        db.collection('ocr').doc().set({ value: value, label: url, type: type });
-      });
-      back(nameDoc);
+    setDocuments(docs);
+    if (docs.length > 0) {
+      const pdfFileNames = Array.from(docs).map((doc) => doc.name);
+      setSelectedPdfFiles(pdfFileNames);
     }
   }
 
-  const back = (docname) => {
-    axios.post("https://ocrgunicorn-dot-gc-k-gbl-lab.uc.r.appspot.com/ocr", { "url": `docs/` + docname, "doctype": selectedOption })
-  }
+  const upload = async (rfc) => {
+    if (documents.length === 0) {
+      console.log('NO, pon algo');
+    } else {
+      var date = new Date();
+      var flotDate = date.getTime().toString();
+      
+      // Lógica para procesar cada documento en 'documents'
+      for (const file of documents) {
+        const doc = file.name.split(".");
+        const type = doc.pop();
+        var value = doc.join(".");
+        var nameDoc = `${value}-${flotDate}.${type}`; // Nombre del documento
+  
+        // Crear el nombre del directorio
+        var directoryName = `${rfc}-${flotDate}`;
+        // Subir el documento a Firebase Storage en el directorio creado
+        const snapshot = await storage.ref(`/${directoryName}/${nameDoc}`).put(file);
+        const url = await snapshot.ref.getDownloadURL();
 
+        // Agregar el documento a Firestore
+        await db.collection('ocr').doc().set({ value: value, label: url, type: type });
+
+        // Crear un objeto FormData
+        const formData = new FormData();
+        formData.append("url", `docs/${nameDoc}`);
+
+        // Configurar las cabeceras
+        const headers = {
+          "X-Requested-With": "XMLHttpRequest",
+          // Otras cabeceras si es necesario
+        };
+
+        // Realizar la solicitud POST con FormData
+        try {
+          const response = await axios.post("https://ocrgunicorn-dot-gc-k-gbl-lab.uc.r.appspot.com/ocr", formData, {
+            headers: headers,
+          });
+          const data = response.data;
+          console.log(data);
+        } catch (error) {
+          console.error("Error en la solicitud POST:", error);
+        }
+      }
+    }
+  };
+  
+  const handleRfcChange = (event) => {
+    // Actualizar el estado del RFC cuando cambie el input
+    setRfc(event.target.value);
+  };
+  
   const onHandleSubmit = (event) => {
     event.preventDefault();
-    upload();
+    upload(rfc);
+    setDocuments([]);
+    setRfc("");
+    setSelectedPdfFiles([])
   }
+
+  const { getRootProps, getInputProps } = useDropzone({
+    accept: ".pdf",
+    onDrop: onHandleChange,
+    multiple: true,
+  });
+
 
   return (
     <SignInStyled>
       <img alt='logo' src={ANDROID_192} />
-      <h2>Lectura de Archivos</h2>
-      <form className='file_upload'>
-        <Select
-          label='tipo de archivo'
-          onChange={onHandleChangeSelect}>
-          <option value={'base'}>Seleccione tipo de archivo</option>
-          {options.map((e, key) => {
-            return (
-              <option key={key} value={e.value}>
-                {e.label}
-              </option>
-            );
-          })}
-        </Select>
-        <p />
-        <Document allowUpload allowedDocumentTypes=".pdf" documentName="file" key={documents}
-          file={documents} label={"suba su documento"} onChange={onHandleChange} onClickDelete={deleteFile} />
-        <p />
-        <Button size='large' device='mobileLight' onClick={onHandleSubmit}>
-          Cargar
-        </Button>
-      </form>
-      <p />
-      <table className="fl-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>PDF</th>
-            <th>Excel</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Object.keys(docsUrls).map((item, index) => {
-            return <tr key={index}>
-              <td key={item}>{item}</td>
-              <td><a key={item + "pdf"} href={docsUrls[item]["pdf"]}> pdf </a></td>
-              <td><a key={item + "xlsx"} href={docsUrls[item]["xlsx"]}> excel </a></td>
-            </tr>;
-          })}
-        </tbody>
-      </table>
-      <Button className="sign-out" onClick={signOut}>
-        Log out
-      </Button>
+      <Container className='container'>
+          <h2>Carga de Archivos</h2>
+                <form className='file_upload'>
+                  <p />
+                    <div {...getRootProps()} className="dropzone">
+                      <input {...getInputProps()} />
+                      <p>Arrastra y suelta archivos o haz clic aquí para seleccionar 📤</p>
+                    <p />
+                    </div>
+                    <p />
+                    {/* Campo de entrada para el RFC aquí */}
+                    <div className='rfc-input'>
+                      <b><label htmlFor='rfc'>RFC del Cliente:  </label></b>
+                      <input
+                        type='text'
+                        id='rfc'
+                        name='rfc'
+                        value={rfc} // Enlazar el valor del input con el estado "rfc"
+                        onChange={handleRfcChange} // Manejar cambios en el input
+                      />
+                    </div>
+                    <p />
+                          {/* Lista de nombres de archivos PDF seleccionados */}
+                    <div>
+                    <b><label htmlFor='rfc'>Archivos PDF Seleccionados:  </label></b>
+                      <ul>
+                        {selectedPdfFiles.map((fileName, index) => (
+                          <li key={index}>{fileName}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className='btn'>
+                      <Button size='large' device='mobileLight' onClick={onHandleSubmit}>
+                        Cargar
+                      </Button>
+                    </div>
+                </form>
+                <p />
+      </Container>
     </SignInStyled>
-  )
+  );
 }
 
 const SignInStyled = styled.div`
@@ -194,6 +193,23 @@ const SignInStyled = styled.div`
     background: #FF4759;
 }
 
+.dropzone {
+  text-align: center;
+  padding: 20px;
+  border: 3px dashed #eeeeee;
+  background-color: #fafafa;
+  color: #bdbdbd;
+  margin-bottom: 20px;
+  cursor: pointer;
+}
+
+.btn {
+  text-align: center;
+}
+
+.container{
+  text-align: center;
+}
 /* Responsive */
 @media (max-width: 767px) {
     .fl-table {
@@ -239,6 +255,7 @@ const SignInStyled = styled.div`
         display: block;
         text-align: center;
     }
+
 }
 `
 export default FileUpload
