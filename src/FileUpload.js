@@ -22,16 +22,6 @@ const FileUpload = () => {
     }
   }
 
-
-  /* Cargar Carpeta */
-
-  /* Agregar campo para RFC y concatenarlo al TIMESTAMP
-  - llamar el folder con el mismo nombre */
-
-/*   const deleteFile = () => {
-    setDocuments([]);
-  } */
-
   const upload = async (rfc) => {
     if (documents.length === 0) {
       console.log('NO, pon algo');
@@ -48,7 +38,7 @@ const FileUpload = () => {
   
         // Crear el nombre del directorio
         var directoryName = `${rfc}-${flotDate}`;
-              // Subir el documento a Firebase Storage en el directorio creado
+        // Subir el documento a Firebase Storage en el directorio creado
         const snapshot = await storage.ref(`/${directoryName}/${nameDoc}`).put(file);
         const url = await snapshot.ref.getDownloadURL();
 
