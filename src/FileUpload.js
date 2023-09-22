@@ -92,7 +92,7 @@ const FileUpload = () => {
   return (
     <SignInStyled>
       <img alt='logo' src={ANDROID_192} />
-      <Container>
+      <Container className='container'>
           <h2>Carga de Archivos</h2>
                 <form className='file_upload'>
                   <p />
@@ -207,6 +207,9 @@ const SignInStyled = styled.div`
   text-align: center;
 }
 
+.container{
+  text-align: center;
+}
 /* Responsive */
 @media (max-width: 767px) {
     .fl-table {
